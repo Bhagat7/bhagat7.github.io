@@ -118,6 +118,58 @@ footer h2 { margin-bottom: 12px; }
 footer p { margin: 0 0 6px; }
 .small { font-size: 0.875rem; color: var(--muted); margin-top: 24px !important; }
 
+
+/* Flow diagrams inside case studies */
+.flow { margin: 20px 0 4px; padding: 18px; background: var(--surface); border: 1px solid var(--grid); border-radius: 10px; }
+.flow figcaption { font-size: 0.875rem; color: var(--muted); margin-bottom: 12px; }
+.flow ol { list-style: none; margin: 0; padding: 0; display: flex; align-items: stretch; gap: 0; }
+.flow li { flex: 1 1 0; display: flex; align-items: center; }
+.flow li + li::before {
+  content: ""; flex: 0 0 22px; height: 2px; background: var(--chart); position: relative;
+  margin: 0 2px; -webkit-mask: linear-gradient(#000 0 0); 
+}
+.flow li + li { position: relative; }
+.flow li + li::after {
+  content: ""; position: absolute; left: 18px; top: 50%; width: 6px; height: 6px;
+  border-top: 2px solid var(--chart); border-right: 2px solid var(--chart); transform: translateY(-50%) rotate(45deg);
+}
+.node { flex: 1; padding: 10px 10px; border: 1.5px solid var(--grid); border-radius: 8px; font-size: 0.875rem; line-height: 1.3; text-align: center; background: var(--paper); }
+.node b { display: block; font-weight: 600; color: var(--ink); }
+.node small { color: var(--muted); font-size: 0.8rem; }
+.node.key { border-color: var(--chart); }
+.node.out { border-color: var(--mark); }
+.flow .via { font-size: 0.75rem; color: var(--chart); text-align: center; }
+
+/* Career chart: a real Gantt of roles over time */
+.gantt { margin: 0 0 40px; }
+.gantt figcaption { font-size: 0.875rem; color: var(--muted); margin-bottom: 10px; }
+.g-rows { position: relative; }
+.g-row { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 12px; height: 34px; }
+.g-row > span { font-size: 0.875rem; font-weight: 600; text-align: right; }
+.g-track { position: relative; height: 100%; border-left: 1px solid var(--grid); }
+.g-bar { position: absolute; top: 8px; height: 18px; border-radius: 4px; background: var(--chart); transform-origin: left; }
+.g-bar.edu { background: var(--muted); }
+.g-bar.now { background: linear-gradient(to right, var(--chart) 85%, transparent); }
+.g-axis { display: grid; grid-template-columns: 150px 1fr; gap: 12px; }
+.g-ticks { position: relative; height: 22px; border-top: 1px solid var(--grid); }
+.g-ticks span { position: absolute; top: 4px; font-size: 0.75rem; color: var(--muted); transform: translateX(-50%); }
+.g-grid { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--grid); }
+
+@media (max-width: 760px) {
+  .flow ol { flex-direction: column; }
+  .flow li { width: 100%; flex-direction: column; }
+  .flow li + li::before { flex: 0 0 18px; width: 2px; height: 18px; margin: 2px 0; }
+  .flow li + li::after { left: 50%; top: 13px; transform: translateX(-50%) rotate(135deg); }
+  .node { width: 100%; }
+  .g-row, .g-axis { grid-template-columns: 92px 1fr; gap: 8px; }
+  .g-row > span { font-size: 0.75rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .js .g-bar { transform: scaleX(0); transition: transform .9s cubic-bezier(.2,.7,.2,1); }
+  .js .g-bar:nth-child(n) { transition-delay: calc(var(--i, 0) * 120ms); }
+  .js .gantt.in .g-bar { transform: scaleX(1); }
+}
+
 @media (max-width: 760px) {
   .facts { grid-template-columns: repeat(2, 1fr); }
   .facts li:nth-child(2) { border-right: 0; }
@@ -184,6 +236,7 @@ footer p { margin: 0 0 6px; }
           <dt>What I did</dt><dd>Prototyped an AI agent that takes analytics questions in plain language and answers them from the company's data.</dd>
           <dt>Result</dt><dd>A working prototype showing self-serve analytics without writing SQL.</dd>
         </dl>
+                <figure class="flow"><figcaption>How it works</figcaption><ol><li><div class="node"><b>Question</b><small>in plain English</small></div></li><li><div class="node key"><b>AI agent</b><small>interprets the question</small></div></li><li><div class="node"><b>Analytics data</b><small>queried live</small></div></li><li><div class="node out"><b>Answer</b><small>for the person who asked</small></div></li></ol></figure>
         <ul class="tools"><li>Claude</li><li>MCP</li><li>SQL</li></ul>
       </div>
     </article>
@@ -197,6 +250,7 @@ footer p { margin: 0 0 6px; }
           <dt>What I did</dt><dd>Set up Model Context Protocol servers connecting Claude to Apache Superset and Google Analytics 4.</dd>
           <dt>Result</dt><dd>Faster data access and analytics prototyping from a single AI interface.</dd>
         </dl>
+                <figure class="flow"><figcaption>What connects to what</figcaption><ol><li><div class="node"><b>Apache Superset and Google Analytics 4</b><small>BI and web analytics data</small></div></li><li><div class="node"><b>MCP servers</b><small>one per data source</small></div></li><li><div class="node key"><b>Claude</b><small>one interface for analysis</small></div></li></ol></figure>
         <ul class="tools"><li>Model Context Protocol</li><li>Claude</li><li>Apache Superset</li><li>GA4</li></ul>
       </div>
     </article>
@@ -210,6 +264,7 @@ footer p { margin: 0 0 6px; }
           <dt>What I did</dt><dd>Built and optimized Cube.js data models backed by MySQL, supporting the end-to-end BI stack with Apache Superset.</dd>
           <dt>Result</dt><dd>Improved query performance and delivered 93 dashboards used across 8+ teams.</dd>
         </dl>
+                <figure class="flow"><figcaption>The BI stack I support</figcaption><ol><li><div class="node"><b>MySQL and ClickHouse</b><small>source data</small></div></li><li><div class="node key"><b>Cube.js</b><small>semantic layer: shared metrics</small></div></li><li><div class="node"><b>Apache Superset</b><small>93 dashboards</small></div></li><li><div class="node out"><b>8+ teams</b><small>plus client reporting</small></div></li></ol></figure>
         <ul class="tools"><li>Cube.js</li><li>MySQL</li><li>ClickHouse</li><li>Apache Superset</li><li>OLAP</li></ul>
       </div>
     </article>
@@ -218,6 +273,11 @@ footer p { margin: 0 0 6px; }
   <section id="experience" aria-labelledby="exp-h">
     <h2 id="exp-h">Experience</h2>
     <p class="section-note">All roles at Vantage Circle unless noted.</p>
+    <figure class="gantt" role="img" aria-label="Career timeline: Educator Oct 2022 to May 2023, Business Analyst Jun 2023 to Apr 2024, Data Analyst Apr 2024 to Mar 2025, Data Analyst I Apr 2025 to present">
+      <figcaption>Four years, one direction: from teaching to BI and analytics</figcaption>
+      <div class="g-rows"><div class="g-row"><span>Data Analyst I</span><div class="g-track"><i class="g-grid" style="left:6.25%"></i><i class="g-grid" style="left:31.25%"></i><i class="g-grid" style="left:56.25%"></i><i class="g-grid" style="left:81.25%"></i><i class="g-bar now" style="left:62.50%;width:37.50%;--i:3"></i></div></div><div class="g-row"><span>Data Analyst</span><div class="g-track"><i class="g-grid" style="left:6.25%"></i><i class="g-grid" style="left:31.25%"></i><i class="g-grid" style="left:56.25%"></i><i class="g-grid" style="left:81.25%"></i><i class="g-bar " style="left:37.50%;width:22.92%;--i:2"></i></div></div><div class="g-row"><span>Business Analyst</span><div class="g-track"><i class="g-grid" style="left:6.25%"></i><i class="g-grid" style="left:31.25%"></i><i class="g-grid" style="left:56.25%"></i><i class="g-grid" style="left:81.25%"></i><i class="g-bar " style="left:16.67%;width:20.83%;--i:1"></i></div></div><div class="g-row"><span>Educator</span><div class="g-track"><i class="g-grid" style="left:6.25%"></i><i class="g-grid" style="left:31.25%"></i><i class="g-grid" style="left:56.25%"></i><i class="g-grid" style="left:81.25%"></i><i class="g-bar edu" style="left:0.00%;width:14.58%;--i:0"></i></div></div></div>
+      <div class="g-axis"><span></span><div class="g-ticks"><span style="left:6.25%">2023</span><span style="left:31.25%">2024</span><span style="left:56.25%">2025</span><span style="left:81.25%">2026</span></div></div>
+    </figure>
     <ol class="timeline">
       <li>
         <h3>Data Analyst I</h3>
@@ -270,5 +330,14 @@ footer p { margin: 0 0 6px; }
     <p class="small">© 2026 Abhishek Bhagat</p>
   </footer>
 </div>
+<script>
+document.documentElement.classList.add('js');
+(function(){
+  var g = document.querySelector('.gantt'); if (!g) return;
+  if (!('IntersectionObserver' in window)) { g.classList.add('in'); return; }
+  var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting){ g.classList.add('in'); io.disconnect(); } }); }, {threshold: .35});
+  io.observe(g);
+})();
+</script>
 </body>
 </html>
