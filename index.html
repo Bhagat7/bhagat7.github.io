@@ -219,6 +219,28 @@ rect[class^="s"]:hover, circle:hover { opacity: .8; }
   .btn { border: 1px solid #000; }
 }
 </style>
+<!-- Mixpanel: official loader snippet. Creates a stub window.mixpanel that queues calls, then loads the real library asynchronously. -->
+<script type="text/javascript">
+(function (f, b) { if (!b.__SV) { var e, g, i, h; window.mixpanel = b; b._i = []; b.init = function (e, f, c) { function g(a, d) { var b = d.split("."); 2 == b.length && ((a = a[b[0]]), (d = b[1])); a[d] = function () { a.push([d].concat(Array.prototype.slice.call(arguments, 0))); }; } var a = b; "undefined" !== typeof c ? (a = b[c] = []) : (c = "mixpanel"); a.people = a.people || []; a.toString = function (a) { var d = "mixpanel"; "mixpanel" !== c && (d += "." + c); a || (d += " (stub)"); return d; }; a.people.toString = function () { return a.toString(1) + ".people (stub)"; }; i = "disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking start_batch_senders people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove".split( " "); for (h = 0; h < i.length; h++) g(a, i[h]); var j = "set set_once union unset remove delete".split(" "); a.get_group = function () { function b(c) { d[c] = function () { call2_args = arguments; call2 = [c].concat(Array.prototype.slice.call(call2_args, 0)); a.push([e, call2]); }; } for ( var d = {}, e = ["get_group"].concat( Array.prototype.slice.call(arguments, 0)), c = 0; c < j.length; c++) b(j[c]); return d; }; b._i.push([e, f, c]); }; b.__SV = 1.2; e = f.createElement("script"); e.type = "text/javascript"; e.async = !0; e.src = "undefined" !== typeof MIXPANEL_CUSTOM_LIB_URL ? MIXPANEL_CUSTOM_LIB_URL : "file:" === f.location.protocol && "//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js".match(/^\/\//) ? "https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js" : "//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js"; g = f.getElementsByTagName("script")[0]; g.parentNode.insertBefore(e, g); } })(document, window.mixpanel || []);
+</script>
+<!-- Mixpanel: init. Token is a public project token (US data residency, so no api_host override is needed). ?notrack opts this browser out, ?track opts it back in. -->
+<script>
+(function () {
+  try {
+    var q = new URLSearchParams(location.search);
+    var optOut = q.has('notrack');
+    var optIn = !optOut && q.has('track');
+    mixpanel.init('1b12da9d65415637ad27dbaa4fdd13aa', {
+      // No automatic pageview on the visit that is opting out, so it cannot slip through before opt_out_tracking() runs
+      track_pageview: !optOut,
+      persistence: 'localStorage'
+    });
+    if (optOut) mixpanel.opt_out_tracking();
+    // Empty track function: stops Mixpanel sending its own "$opt_in" event, which is not in TRACKING_PLAN.md
+    else if (optIn) mixpanel.opt_in_tracking({ track: function () {} });
+  } catch (e) { /* tracking must never break the page */ }
+})();
+</script>
 </head>
 <body>
 <header class="wrap hero">
@@ -396,6 +418,70 @@ document.documentElement.classList.add('js');
   if (!('IntersectionObserver' in window)) { g.classList.add('in'); return; }
   var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting){ g.classList.add('in'); io.disconnect(); } }); }, {threshold: .35});
   io.observe(g);
+})();
+</script>
+<script>
+/* Mixpanel event tracking. What each event means is documented in TRACKING_PLAN.md */
+(function () {
+  // Every Mixpanel call goes through here. If the library is blocked, missing or throws,
+  // the visitor sees nothing different.
+  function track(name, props) {
+    try {
+      if (window.mixpanel && typeof window.mixpanel.track === 'function') window.mixpanel.track(name, props);
+    } catch (e) {}
+  }
+
+  // Links in the footer are "footer"; the others (header buttons) are "hero"
+  function where(el) { return el.closest('footer') ? 'footer' : 'hero'; }
+
+  // One click listener on the whole document ("event delegation"): it catches clicks on any link
+  // without editing the HTML. closest('a') walks up from whatever was clicked to its link.
+  document.addEventListener('click', function (e) {
+    try {
+      var a = e.target.closest && e.target.closest('a');
+      if (!a) return;
+      var href = a.getAttribute('href') || '';
+      if (a.hasAttribute('download')) {
+        track('Resume Downloaded', { location: where(a) });
+      } else if (/^mailto:/i.test(href)) {
+        track('Contact Clicked', { channel: 'email', location: where(a) });
+      } else if (/(^|\.)linkedin\.com$/i.test(a.hostname)) {
+        track('Contact Clicked', { channel: 'linkedin', location: where(a) });
+      }
+    } catch (err) {}
+  });
+
+  // Fires onSeen(element) the first time each element is visible enough, then stops watching it.
+  // minRatio is how much of the element must be on screen (0.5 = half).
+  function seenOnce(elements, options, minRatio, onSeen) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting || en.intersectionRatio < minRatio) return;
+        io.unobserve(en.target);
+        onSeen(en.target);
+      });
+    }, options);
+    elements.forEach(function (el) { io.observe(el); });
+  }
+
+  try {
+    if (!('IntersectionObserver' in window)) return;
+
+    // Case studies: at least 50% of the article visible
+    seenOnce(Array.prototype.slice.call(document.querySelectorAll('article.case')), { threshold: 0.5 }, 0.5, function (el) {
+      var h = el.querySelector('h3');
+      track('Case Study Viewed', { case_study: h ? h.textContent.trim() : '' });
+    });
+
+    // Sections: counted once their top edge is in the top 80% of the screen (rootMargin shrinks the
+    // viewport by 20% at the bottom). A percentage rule would never fire for the very tall #work.
+    var sections = ['work', 'experience', 'skills', 'education', 'contact']
+      .map(function (id) { return document.getElementById(id); })
+      .filter(Boolean);
+    seenOnce(sections, { rootMargin: '0px 0px -20% 0px' }, 0, function (el) {
+      track('Section Viewed', { section: el.id });
+    });
+  } catch (err) {}
 })();
 </script>
 </body>
